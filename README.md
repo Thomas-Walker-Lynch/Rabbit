@@ -1,24 +1,29 @@
-# Harmony
+ # Harmony
 
-**Status:** Source-visible only — not open source.
+## About
 
-This repository contains internal development tools, Python environments, and structured workspaces for role-based computation and testing. It reflects standardized RT project conventions for environment entry, tool layering, and reproducible developer/tester workflows.
+This is an RT project skeleton. There are a few files from a tentative project here, that service as either an example or hinderence.
 
-## Licensing
+Source one of these evironment files depending on the role being played when entering the project:
 
-This project is *not* open source.
+- env_developer - for code developer role
+- env_tester    - for tester role
+- env_toolsmith - for the toolsmith role
 
-The source code is visible for collaboration, transparency, and historical record only. No permission is granted to use, modify, copy, or redistribute any part of the codebase.
+developers work out of the 'developer' directory
+testers work out of the 'tester' direcgtory
+toolsmthis set up 'tool_shared' and the various env scripts.
 
-See the [`LICENSE`](./LICENSE) file for details.
+document/ - for project documents
+developer/document/ - documents specifically concerning development
+developer/tool/ - tools specific for development
 
-## Roles
+tool_shared/ for tools shared by mulitple roles.
+tool_shared/third_party  for third party tools. For example, if you are going to install Python, put the virtual environment in this directoy under the name 'Python' and set a search path to it under `env_developer` or whereever it gets used from.
 
-This repository is structured around the following roles:
-- `developer/` — implementation and code testing
-- `tester/` — validation and reproducibility
-- `tool_shared/` — shared tools, environments, and third-party modules
+See other projects for examples.  Ariadne or Mosaic projects might be good examples.  Note we no longer using the 🖉 to mark authored content.
 
-Each role is entered via its respective `env_<role>` script.
+## License
 
-
+Harmoy is not distributed with an MIT license. However, projects that
+use the Harmony skeleton might be distrbuted under other licenses. See the directory document/license for a nonexculsive list of other licenses that a project that mekes use of the Harmony skeleton might make use of.

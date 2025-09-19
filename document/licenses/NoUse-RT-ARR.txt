@@ -3,14 +3,9 @@ Title: All Rights Reserved — No License Granted (RT)
 
 Copyright (c) 2025 Reasoning Technology Inc.. All rights reserved.
 
-No license is granted by this notice. Except under a separate written
-agreement executed by Reasoning Technology Inc., you may not use, copy, modify, merge,
-publish, distribute, sublicense, sell, host, or deploy this software
-("Software"), in whole or in part, in source or binary form.
+No license is granted by this notice. Except under a separate written agreement executed by Reasoning Technology Inc., you may not use, copy, modify, merge, publish, distribute, sublicense, sell, host, or deploy this software ("Software"), in whole or in part, in source or binary form.
 
-Limited Viewing Permission. If you received this repository directly from
-Reasoning Technology Inc., you may view the files solely to evaluate whether to obtain a
-license. No other rights are granted.
+Limited Viewing Permission. If you received this repository directly from Reasoning Technology Inc., you may view the files solely to evaluate whether to obtain a license. No other rights are granted.
 
 Trademarks. No rights to names, logos, or marks are granted.
 
