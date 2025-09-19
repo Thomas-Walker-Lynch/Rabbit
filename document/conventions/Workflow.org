@@ -1,55 +1,86 @@
-* Project Workflow
+#+TITLE: RT Project Workflow (Spartan)
+#+AUTHOR: RT
+#+OPTIONS: toc:2 num:nil
 
+* Purpose
+Lightweight workflow for RT projects using the Harmony skeleton. Roles are simple; releases are branches. Keep friction low so we can ship.
 
-This document outlines the responsibilities of different roles in the project and the release process.
+* Roles
+** 1) Toolsmith
+- Sets up the skeleton
+- Populates shared tools
+- Maintains those tools
 
-** 1. Project Administrator
-   - Download the project from GitHub.
-   - Install the required tools.
-   - Explain workflows and file locations to project members.
-   - Manage Major and Minor Releases.
+** 2) Developer
+- Translates the spec into code
+- Evolves the code iteratively
 
-** 2. Developer
-   - From the `Harmony/` directory, run:
-     #+begin_src sh
-       source env_developer
-     #+end_src
-     to set up the developer environment.
-   - Build the project:
-     #+begin_src sh
-       make
-     #+end_src
-   - Copy relevant files to the release directory:
-     #+begin_src sh
-       release
-     #+end_src
-   - The tester will evaluate the release candidate.
+** 3) Tester
+- Writes unit tests for small functions
+- Writes integration tests
+- Assembles and runs the regression suite
+- *Policy:* every reported bug gains a test in the regression suite
 
-** 3. Tester
-   - From the `Harmony/` directory, set up the testing environment:
-     #+begin_src sh
-       source env_tester
-     #+end_src
-   - Build and run tests:
-     #+begin_src sh
-       make
-       shell/test_<name>
-     #+end_src
-   - Alternatively, change to a test directory, source its environment, and run tests manually.
-   - The development and testing process will iterate until the release candidate is ready for an official release.
+** 4) Project Manager
+- Aligns on “what is working and how well”
+- Confirms readiness to cut a release branch (with the team)
 
-** 4. Major Release
-   - The release candidate is in `$REPO_HOME/release` and has passed testing.
-   - Verify that `$REPO_HOME/tool_shared/bespoke/version` outputs the correct version information. Modify it if necessary.
-   - Create a new branch named `release_v<n>.0` where `<n>` is the major version.
-   - Rename the release directory to `$REPO_HOME/release_v<n>.0` and create a new empty `$REPO_HOME/release/` directory.
+* How to enter the project
+1) =cd= to the project root  
+2) Source the proper environment (e.g., =. env_developer=)  
+3) Run tools *inside that environment*
 
-** 5. Minor Release
-   - Urgent changes to a major release are made on its corresponding branch.
-   - The developer makes edits, and the tester evaluates the release candidate as usual.
-   - The `version` program is updated.
-   - Rename the release directory to `release_v<n>.<m>`, where `<m>` is the minor version.
-   - Merge changes into `core_developer_branch` if necessary.
+* Release flow
+** The little loop
+The =core_developer_branch= is the moving head under active development.
 
-** 6. Tips
-   - If acting in multiple roles (developer, tester, admin), keep separate terminal shells for each role to avoid misconfigurations.
+- =\$REPO_HOME/release= holds *current candidates under test* (convenience staging).
+- Loop:
+  1. Architect and PM, maintain the “required + desired” feature manifest.
+  2. Architect sketches the outline (expect it to evolve).
+  3. Developers implement features.
+  4. Developers drop candidates into =$REPO_HOME/release=.
+  5. Tester exercises candidates, files bugs, and adds tests to the regression suite.
+  6. Developers address issues and produce new candidates.
+  7. Repeat until candidates are sufficiently functional and reliable.
+
+Developers may keep personal experiments under =developer/=. These are not written for repeatability like tests; though they might seed future tests.
+
+** The big loop
+When candidates in =$REPO_HOME/release= are sufficiently functional and stable—and the PM agrees on “what is working and how well”—*cut a release branch*.
+
+- *Name*: =release_v<n>= where =n= is the next consecutive integer (starting at 1).
+- *Create*:
+  #+begin_src sh
+  git checkout core_developer_branch
+  git pull --ff-only
+  git branch release_v3
+  git push reasoning_repo release_v3
+  git push github_repo    release_v3
+  #+end_src
+- After this, the release branch “takes on its own life.”
+
+If a non-urgent bug is found on the shipped line:
+- Fix it on =core_developer_branch= for the next release (backport to the release if truly needed).
+- Due to the bug getting a regression test, the core developers will not forget it.
+
+If an urgent fix is needed on the shipped line:
+- Apply the fix on =release_v<n>=, then cut =release_v<n.m>= where =m= is the next consecutive modification number (starting at 1).
+- As always, *add a regression test* for the bug.
+
+* Deprecation
+New major releases *deprecate prior releases*. Maintainers decide any support window.
+
+* Do / Don’t
+- *Do*: fast-forward pulls on release branches; keep history linear.
+- *Do*: keep fixes small and targeted.
+- *Don’t*: rebase release branches.
+- *Don’t*: routinely merge the moving core branch into a release line.
+
+* Notes
+- Tags are not required in this spartan flow (use only if your distribution channel needs them).
+- Consider server-side protection on =release_v*= branches to prevent force-pushes.
+- Typical remotes: =reasoning_repo= (internal) and =github_repo= (GitHub). Substitute if yours differ.
+
+* One-liner mental model
+Core keeps moving; releases branch off and live their own lives. If everyone uses Harmony, we all live in peace. :)
