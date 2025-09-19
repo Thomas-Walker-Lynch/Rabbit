@@ -1,0 +1,25 @@
+SPDX-License-Identifier: LicenseRef-TWL-Confidential
+Title: Confidential — Restricted Access (Personal)
+
+CONFIDENTIAL INFORMATION. The contents of this repository and all associated
+materials ("Confidential Information") are proprietary to Thomas Walker Lynch.
+If you are not an intended recipient, you must cease access, delete all copies,
+and notify the author immediately.
+
+No license is granted by this notice. Unless you have a separate written
+agreement (e.g., NDA or license) with the author, you may not use, copy,
+modify, disclose, distribute, publish, host, provide access to, or reverse
+engineer any part of the Confidential Information.
+
+Permitted Internal Review. If you are an intended recipient, you may review
+the materials solely for internal evaluation and solely within the scope
+authorized by the author.
+
+Return/Destruction. Upon request, you must promptly return or destroy all
+copies and certify destruction.
+
+Trademarks. No rights to names, logos, or marks are granted.
+
+Warranty/Liability. PROVIDED "AS IS", WITHOUT WARRANTY. TO THE MAXIMUM
+EXTENT PERMITTED BY LAW, THE AUTHOR SHALL NOT BE LIABLE FOR ANY DAMAGES.
+

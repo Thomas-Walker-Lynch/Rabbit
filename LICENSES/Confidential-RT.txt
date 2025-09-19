@@ -1,0 +1,26 @@
+SPDX-License-Identifier: LicenseRef-RT-Confidential
+Title: Confidential — Restricted Access (RT)
+
+CONFIDENTIAL INFORMATION. The contents of this repository and associated
+materials ("Confidential Information") are proprietary to Reasoning Technology Inc..
+If you are not an intended recipient, you must cease access, delete all
+copies, and notify Reasoning Technology Inc. immediately.
+
+No license is granted by this notice. Unless you have a separate written
+agreement with Reasoning Technology Inc. (e.g., NDA or license), you may not use, copy,
+modify, disclose, distribute, publish, host, provide access to, or reverse
+engineer any part of the Confidential Information.
+
+Permitted Internal Review. Intended recipients may review the materials
+solely for internal evaluation and only as expressly authorized by
+Reasoning Technology Inc..
+
+Return/Destruction. Upon request, promptly return or destroy all copies and
+certify destruction.
+
+Trademarks. No rights to names, logos, or marks are granted.
+
+Warranty/Liability. PROVIDED "AS IS", WITHOUT WARRANTY. TO THE MAXIMUM
+EXTENT PERMITTED BY LAW, Reasoning Technology Inc. AND AUTHORS ARE NOT LIABLE FOR DAMAGES.
+
+Contact. For authorization or licensing, email licensing@ReasoningTechnology.com.
