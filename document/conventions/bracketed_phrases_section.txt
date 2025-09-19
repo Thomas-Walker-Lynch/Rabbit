@@ -1,0 +1,51 @@
+* Bracketed Phrases
+
+In token processing, a *bracketed phrase* is the text starting from an opening bracket up to its matching closing bracket, including both brackets. We treat any of `(...)`, `{...}`, `[...]`, or `<...>` as “brackets”. Bracketed phrases are detected purely at the token level—no higher-level grammar or semantics are considered.
+
+** Examples
+- **`if(x){...}` vs. `f(x){...}`**  
+  Both share the same token-level structure: an identifier followed by `(x)` and then `{...}`.  
+- **`sin(3x)`**  
+  Has one bracketed phrase `(3x)`, where `3x` is the “contents” and `()` is the “container.”
+
+** Nesting
+
+1. **Innermost Bracketed Phrase**  
+   Contains *no other* bracketed phrase inside it. Due to adjacency, multiple innermost bracketed phrases can occur.
+
+2. **Outermost Bracketed Phrase**  
+   An outermost bracketed phrase is one that is not itself contained in any other bracketed phrase.
+
+3. **Contained (Inner) Bracketed Phrase**  
+   A bracketed phrase located within the contents of another bracketed phrase (the *outer* one).
+
+4. **Bracketed Phrase with Nesting**  
+   A bracketed phrase that contains one or more bracketed phrases.
+
+   A bracketed phrase is “with nesting” only if it contains at least one inner bracketed phrase. In other words, non-quoted bracket punctuated phrases occurs inside the contents — not just commas or other punctuation.
+
+
+**Examples**
+In `sin(f(x) + (a))`, the phrase `(x)` is contained in `(f(x) (a))`, which in turn is contained in `sin(...)`.  `(a) is also contained in`(f(x) (a))`. `(x)` is innermost.
+`(a)` is also innermost.
+
+**Open Bracketed Phrases
+
+A bracketed phrase is **open** if it’s missing a matching opening or closing bracket.
+
+- **Open on the Right**: Has unmatched opening brackets (e.g., `(` but no `)`).
+- **Open on the Left**: Has unmatched closing brackets (e.g., `)` but no preceding `(`).
+
+** 1D Box Analogy
+
+Think of each bracketed phrase like a **1D CSS box**:
+
+- The **opening and closing brackets** are the “borders.”
+- **Margin (outside)**: By default, bracketed phrases have *no extra spacing* around their borders—unless another rule (like an operator or adjacent token) requires space.  
+  Example: `f()()` is valid with no space, but `f () ()` is not.
+- **Padding (inside)**: If a bracketed phrase is both  
+  1) outermost on a line,  
+  2) has nesting,  
+  3) and is not a Lisp s-expression,  
+  then place **one space** immediately after the opening bracket and **one space** before the closing bracket.
+

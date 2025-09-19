@@ -1,0 +1,196 @@
+#+TITLE: RT Code Format Guide
+#+AUTHOR: Thomas Walker Lynch
+#+DATE: 2025-02-28
+#+OPTIONS: toc:nil
+
+# perhaps add rules about main functions being merely wrappers that pack arguments, call the reall business function, and then unpack results from the business function perhaps to print, and to set the main return value.
+
+* Introduction
+
+The RT Code Format is intended to apply across languages, and thus the rules are agnostic to the language being code. The RT Code format produces a dense output so as to make room
+for longer identifier names and to put more code on that tiny screen of your laptop so you can work in a cafe. The rules focus on indentation, naming conventions, enclosure spacing, and unique handling of commas.
+
+* RT Formatting Should Be Applied After Any Other Formatting
+
+Many formatting tools apply automatic spacing and alignment adjustments before finalizing code.  One common example is Preemptive Enclosure Adjustment (PEA), where spaces are added or removed inside enclosures automatically.  This can cause conflicts with RT Formatting rules.
+
+RT Formatting should be applied as a **final step** to resolve such conflicts:
+- RT rules **override** PEA rules where they differ.
+- Where there is no conflict, existing formatting remains unchanged.
+- This ensures consistency when AI-generated code is reformatted.
+
+Common formatting conflicts:
+- **Indentation:** PEA favors 4-character indentation, whereas RT Formatting enforces 2-character indentation.  
+  This allows for more liberal indentation use and keeps statements compact.
+- **Comma Placement:** RT Formatting treats the comma as a **syntactic append operator**.
+- **Parentheses, Brackets, and Braces:** AI should follow the **exception detection procedure** for enclosure spacing.
+- **Operator Formatting:** Certain operators require **specific spacing rules**.
+- **Short Statements:** `if`, `while`, and similar constructs follow the **Short Stuff Rule** for single-line clauses.
+
+* Naming Conventions
+
+1. **Namespaces and types** use *PascalCase*.
+2. **Functions and variables** use *snake_case*.
+3. **Ordered collections** use `_list` as a suffix (e.g., `node_list`), even if the language does not have a `List` type.
+
+Examples:
+#+BEGIN_SRC c
+mouse_count
+test_LabelList_0  // Function testing LabelList (a class/type)
+Thomas_Walker_Lynch
+#+END_SRC
+
+* Binary Operators
+
+  There is no space around multiply and divide binary operators.
+
+  There is one space around all other operators.
+
+* Assignment
+
+   Two types of assignment:
+
+   1. sampling assignment, `=` inside `if`, `while`, etc.
+   2. single statement assignment 
+
+   No space around sampling assignment `=`.
+
+Example:
+#+BEGIN_SRC c
+if( result=some_condition() ){  // Sampling assignment, no spaces
+  process(result);
+}
+a = b + c;  // Regular assignment with spaces
+#+END_SRC
+
+* No space before Newline
+
+There is never space before an unquoted newline.
+
+* Enclosure
+
+Enclosed text is found after an opening enclosure punctuation symbol,
+and before the matching closing punctuation symbol.
+
+- `(...)` (parentheses)
+- `{...}` (braces)
+- `[...]` (square brackets)
+- `<...>` (angle brackets)
+
+It is common to find enclosures as part of language statements. For example:
+#+BEGIN_SRC c
+if(i<10)
+#+END_SRC
+Here the enclosed text is `i<10`.
+
+As another example:
+#+BEGIN_SRC c
+while(true)
+#+END_SRC
+Here the enclosured text is `true`.
+
+Enclosures are also found in expressions. For example:
+#+BEGIN_SRC c
+ 3*(2 + 4)
+#+END_SRC
+Here the enclosed text is `2 + 4`.
+
+There can be multiple enclosures in a given statement, depending on the language, or in a given expression.  For example:
+#+BEGIN_SRC c
+ (1 +3)*(2 + 4)
+#+END_SRC
+Here there are two enclosures `(1 + 3)`  and `(2 + 4)`.  The first enclosure encloses the text `1 + 3`  while the second encloses `(2 + 4)`.
+
+In RT formatting, there is no native space before or after the enclosure punctuation.  There can be space due to other rules, such as the space around the plus operator. For example:
+#+BEGIN_SRC c
+ (1*3) + (2*4)
+#+END_SRC
+Here the space around the enclosure punctuation belongs to the operator, rather than to the enclosure punctuation.
+
+Enclosed text can hold further enclosed text. This is 'nesting' of enclosures.
+
+Because enclosure nesting can run deep, we have allowed for one exception to the no space enclosure punctuation rule. Follow these steps:
+
+** Line-by-Line Formatting
+
+Enclosure formatting is applied **per line**, without scanning beyond that line.
+
+- **Virtual Closure Rule:**  
+  At the **end of a line**, any still-open enclosure punctuation is treated as **closed** for formatting purposes.
+
+- **Virtual Opening Rule:**  
+  At the **start of a new line**, any **orphaned closing punctuation** found there is treated as **belonging to the current line**.
+
+
+** Procedure for Identifying Enclosure Exceptions
+
+1. The language is not Lisp.
+2. The enclosure meets **all** of the following conditions:
+   - It opens and closes on a **single line**.
+   - It contains at least **one nested enclosure** inside.
+   - It is not found in the enclosed text of other enclosure on that line.
+3. If these conditions hold, **apply the exception**:
+   - Insert **one space** after the opening enclosure punctuation.
+   - Insert **one space** before the closing enclosure punctuation.
+
+**Example of a qualifying enclosure:**
+#+BEGIN_SRC c
+if( (x == 3 || y < 5) && z ){
+  process_data();
+}
+#+END_SRC
+
+Here, `( (x == 3 || y < 5) && z )` qualifies for spacing adjustment.
+
+**Example of a non-qualifying enclosure:**
+#+BEGIN_SRC c
+if(y < 5){
+  process_data();
+}
+#+END_SRC
+
+Since no enclosure on this line meets the conditions, **no additional spaces** are added.
+
+** Adjacency
+When two enclosures appear side by side (like `)(` or `}{`), there is *no space* between them.
+
+* Commas
+
+The **comma rule** is one of the most distinctive and recognizable aspects of RT Code Formatting.
+
+1. **One space before the comma** (e.g., `a ,b`).
+2. **No space after the comma** (e.g., `a ,b`).
+3. **Line break before the comma when breaking lines**, but **no line break after the comma**.
+
+Examples:
+#+BEGIN_SRC c
+a
+,b
+#+END_SRC
+
+When function arguments get too long, break lines as follows:
+#+BEGIN_SRC c
+result = some_function(
+   first_argument
+  ,second_argument_with_longer_name
+  ,third_argument
+);
+#+END_SRC
+
+✔ **This ensures consistency and maintains readability.**  
+
+* Short Stuff Rule
+
+For **`if`**, **`for`**, and **`while`** statements that introduce a *single-line* clause with no `else`, if the **condition and clause together fit within one line, they should **remain on a single line without braces**.  Say when about ≤40 characters, though this is not strictly ≤40 characters — it depends on complexity and formatting. If the condition and action are simple, or perhaps fit a parallel construct with other short stuff, they should stay inline.
+
+
+
+
+
+Example:
+#+BEGIN_SRC c
+if( x > 0 ) return x;
+while( has_next() ) process_next();
+#+END_SRC
+
+ 

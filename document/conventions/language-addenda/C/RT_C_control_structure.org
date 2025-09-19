@@ -1,0 +1,78 @@
+#+TITLE: Reasoning Technology (RT) C file control structure
+#+AUTHOR: Thomas Walker Lynch
+#+OPTIONS: toc:2 num:nil
+#+LANGUAGE: en
+
+* Introduction
+This document summarizes coding conventions used in RT C projects: integrated header designs, ad hoc namespaces, and a structured approach to source file extensions. It also outlines the associated build process using a standardized makefile.
+
+* Header file integration
+RT C projects integrate the header directly into the source file. Each file contains both interface and implementation sections, gated by preprocessor directives. This keeps interface and implementation in sync and avoids maintaining two files.
+
+** Each file has two sections
+- *Interface section*: declarations, macros, and =#include= needed for the interface. Defined exactly once even with multiple inclusion.
+- *Implementation section*: function definitions and any additional includes needed for the implementation. Only compiled when used as an implementation.
+
+Each section is toggled by the CPP macro =FACE=.
+
+** Example
+#+BEGIN_SRC c
+// If not an FACE, then an IMPLEMENTATION
+#ifndef FACE
+  #define MyModule·IMPLEMENTATION
+  // Ensures included files are processed for their interfaces.
+  #define FACE
+#endif
+
+// Define the interface exactly once.
+#ifndef MyModule·FACE
+#define MyModule·FACE
+  // Interface-only includes go here.
+  void MyModule·function();
+#endif
+
+#ifdef MyModule·IMPLEMENTATION
+  // Additional includes for implementation go here.
+  #include <stdio.h>
+  void MyModule·function() {
+    printf("Hello, World!\n");
+  }
+#endif
+#+END_SRC
+
+** Explanation
+- *First block*: If =FACE= is undefined, define =MyModule·IMPLEMENTATION= and set =FACE= so subsequent includes expose interfaces.
+- *Second block*: Define the interface exactly once via =#ifndef MyModule·FACE=.
+- *Third block*: Implementation-only includes and definitions guarded by =MyModule·IMPLEMENTATION=.
+
+* Namespace conventions
+RT projects use ad hoc namespaces: exported identifiers are prefixed with a module name and the =·= (cdot) separator for clarity and to avoid collisions.
+
+** Conventions
+- *Prefix*: module name.
+- *Separator*: =·= visually separates prefix from identifier.
+
+** Example
+#+BEGIN_SRC c
+void Server·run();
+#+END_SRC
+
+* Source file extensions
+Standardized extensions distinguish library from CLI sources:
+- =.lib.c=  :: library implementations
+- =.cli.c=  :: command-line tools
+
+=.lib.c= compiles into libraries; =.cli.c= into executables. The makefile auto-detects and builds accordingly.
+
+** Build process
+1. *Dependency generation*: =make dependency= (only when dependency graph changes).
+2. *Compilation*: =make cli= builds CLI targets and links with the library.
+
+* Benefits
+- *Consistency*: integrated headers keep interfaces and implementations aligned.
+- *Modularity*: each file encapsulates interface + implementation.
+- *Clarity*: namespaces + extensions improve readability.
+- *Efficiency*: standardized makefile reduces build friction.
+
+* Conclusion
+Following these conventions yields robust, modular C projects with predictable builds.

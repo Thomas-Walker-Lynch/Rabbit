@@ -1,29 +1,42 @@
- # Harmony
+# Harmony — RT project skeleton
 
-## About
+Tiny, opinionated starter project skeleton that we use across RT projects independent of language being coded.
 
-This is an RT project skeleton. There are a few files from a tentative project here, that service as either an example or hinderence.
+Pick a role, source the env, build your thing, then release.
 
-Source one of these evironment files depending on the role being played when entering the project:
+## Roles (source these, don’t execute)
+- `env_developer`  — dev workflow
+- `env_tester`     — test + repro
+- `env_toolsmith`  — shared tools + env wiring
 
-- env_developer - for code developer role
-- env_tester    - for tester role
-- env_toolsmith - for the toolsmith role
+Developers work under `developer/`, testers under `tester/`, toolsmiths wire `tool_shared/` and env scripts.
 
-developers work out of the 'developer' directory
-testers work out of the 'tester' direcgtory
-toolsmthis set up 'tool_shared' and the various env scripts.
+## Layout (why it exists)
+- `document/`                        — project docs (+ RT conventions in org)
+- `developer/`                       — dev code, experiments, dev-specific docs/tools
+- `tester/`                          — tests, fixtures, repro steps
+- `tool_shared/`                     — shared tools/env for all roles
+- `tool_shared/third_party/`         — third-party tools
+- `tool_shared/third_party/python/`  — your venv lives here (not committed)
+- `release/`                         — publishable artifacts
+- `tmp/`                             — scratch (gitignored)
 
-document/ - for project documents
-developer/document/ - documents specifically concerning development
-developer/tool/ - tools specific for development
+Empty directories are tracked with `.githolder` (kept out of release archives).
 
-tool_shared/ for tools shared by mulitple roles.
-tool_shared/third_party  for third party tools. For example, if you are going to install Python, put the virtual environment in this directoy under the name 'Python' and set a search path to it under `env_developer` or whereever it gets used from.
+## Quick start
+```bash
+# choose a role (must be sourced)
+source ./env_developer   # or env_tester / env_toolsmith
 
-See other projects for examples.  Ariadne or Mosaic projects might be good examples.  Note we no longer using the 🖉 to mark authored content.
+# create the Python venv under tool_shared/third_party/python/ (literally 'python' instead of 'venv'
+./scripts/python_venv_bootstrap.sh
 
-## License
+# re-enter later
+source ./env_developer
 
-Harmoy is not distributed with an MIT license. However, projects that
-use the Harmony skeleton might be distrbuted under other licenses. See the directory document/license for a nonexculsive list of other licenses that a project that mekes use of the Harmony skeleton might make use of.
+# where used
+
+In public projects, this structure has been used with Python, Java, C, C++, and Lisp projects.
+
+Note the related https://github.com/Thomas-Walker-Lynch/RT-project-share project. It has the generic makefile used on C/C++ projects and other shared tools.  Note the project https://github.com/Thomas-Walker-Lynch/RT_gcc for a more fully featured cpp.  Note the projects https://github.com/Thomas-Walker-Lynch/Mosaic, and https://github.com/Thomas-Walker-Lynch/Mosaic for Java examples of this project skeleton being used for a Java testing and dependency grapph build tool, respectively.
+

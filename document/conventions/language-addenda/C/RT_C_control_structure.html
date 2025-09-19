@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <title>RT C coding conventions</title>
+  <style>
+    body {
+      font-family: 'Noto Sans JP', Arial, sans-serif;
+      background-color: hsl(0, 0%, 0%);
+      color: hsl(42, 100%, 80%);
+      padding: 2rem;
+    }
+    .page {
+      padding: 3rem;
+      margin: 1.25rem auto;
+      max-width: 46.875rem;
+      background-color: hsl(0, 0%, 0%);
+      box-shadow: 0 0 0.625rem hsl(42, 100%, 50%);
+    }
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      color: hsl(42, 100%, 84%);
+      text-transform: uppercase;
+      margin-top: 1.5rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: hsl(42, 100%, 84%);
+      text-align: center;
+      margin-top: 2rem;
+    }
+    h3 {
+      font-size: 1.125rem;
+      color: hsl(42, 100%, 75%);
+      margin-top: 1.5rem;
+    }
+    p, li {
+      color: hsl(42, 100%, 90%);
+      text-align: justify;
+      margin-bottom: 1rem;
+    }
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: hsl(0, 0%, 25%);
+      padding: 0.125rem 0.25rem;
+      color: hsl(42, 100%, 90%);
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+  <header>
+    <h1>Reasoning Technology (RT) C file control structure</h1>
+    <p>© 2024 Thomas Walker Lynch - All Rights Reserved.</p>
+  </header>
+
+  <h2>Introduction</h2>
+
+  <p>This document summarizes some of the coding conventions used in RT C projects. Discussed here are conventions for integrated header designs, ad hoc namespaces, and a structured approach to source file extensions. The document also outlines the associated build process using a standardized makefile.</p>
+
+  <h2>Header file integration</h2>
+
+  <p>RT C projects adopt an innovative approach by integrating headers directly into source files. This ensures consistency between interfaces and implementations, eliminating mismatches. Each file contains both an interface and an implementation section, gated by preprocessor directives.</p>
+
+  <p>Each RT C source file integrates its header directly into the source file. This locality makes header content easier to maintain as everything is found in a single file. It also eliminates the need to maintain two files for each module.</p>
+
+  <h3>Each file has two sections</h3>
+  <ul>
+    <li><strong>Interface section:</strong> Contains declarations, macros, and <code>#includes</code> needed for the interface. Ensures consistency by defining the interface exactly once, even when the file is included multiple times.</li>
+    <li><strong>Implementation section:</strong> Contains function definitions and additional includes needed for the implementation. This section is compiled only when the file is used as an implementation.</li>
+  </ul>
+
+  <p>Each section is turned on and off with the CPP macro <code>FACE</code>.</p>
+
+  <h3>Example</h3>
+  <pre><code>
+// If not an FACE, then an IMPLEMENTATION
+#ifndef FACE
+  #define MyModule·IMPLEMENTATION
+  // Ensures included files are processed for their interfaces.
+  #define FACE
+#endif
+
+// Define the interface exactly once.
+#ifndef MyModule·FACE
+#define MyModule·FACE
+  // Interface-only includes go here.
+  void MyModule·function();
+#endif
+
+#ifdef MyModule·IMPLEMENTATION
+  // Additional includes for implementation go here.
+  #include <stdio.h>
+  void MyModule·function() {
+    printf("Hello, World!\n");
+  }
+#endif
+  </code></pre>
+
+  <h3>Explanation</h3>
+  <p>The example above demonstrates the structure and purpose of each block:</p>
+  <p><strong>First block:</strong> Ensures that the file operates correctly based on the value of <code>FACE</code>. If <code>FACE</code> is undefined, it defines <code>MyModule·IMPLEMENTATION</code> to enable the implementation section and sets <code>FACE</code> to ensure subsequent includes process interface sections.</p>
+  <p><strong>Second block:</strong> Defines the interface, including declarations and interface-specific includes. The <code>#ifndef MyModule·FACE</code> macro ensures the interface is defined exactly once, regardless of how many times the file is included.</p>
+  <p><strong>Third block:</strong> Contains implementation-specific includes and function definitions. Guarded by <code>MyModule·IMPLEMENTATION</code>, it is only included when compiling the implementation.</p>
+  <p>Interface includes are placed in the interface block, ensuring they are available wherever the interface is used. Implementation includes are isolated in the implementation block, minimizing unnecessary dependencies in other files.</p>
+
+  <h2>Namespace conventions</h2>
+  <p>RT projects use ad hoc namespaces to maintain clarity and prevent naming conflicts. This is achieved by prefixing exported identifiers with a module-specific name followed by the <code>·</code> (cdot) character.</p>
+
+  <h3>Conventions</h3>
+  <ul>
+    <li><strong>Prefix:</strong> The module name serves as the prefix, ensuring all identifiers are unique across the program.</li>
+    <li><strong>Separator:</strong> The <code>·</code> character visually separates the prefix from the identifier name, maintaining readability and avoiding conflicts.</li>
+  </ul>
+
+  <h3>Example</h3>
+  <pre><code>
+void Server·run();
+  </code></pre>
+
+  <h2>Source file extensions</h2>
+  <p>RT projects use standardized extensions to distinguish between library and command-line interface (CLI) source files:</p>
+  <ul>
+    <li><strong><code>.lib.c</code>:</strong> Files implementing library functions.</li>
+    <li><strong><code>.cli.c</code>:</strong> Files implementing command-line tools.</li>
+  </ul>
+
+  <p>The <code>.lib.c</code> files compile into libraries, while <code>.cli.c</code> files compile into standalone executables. The makefile processes these files automatically, ensuring a clear separation of functionality.</p>
+
+  <h3>Build process</h3>
+  <p>The build process follows these steps:</p>
+  <ol>
+    <li><strong>Dependency generation:</strong> Run <code>make dependency</code> to create dependencies. This step is only required when the dependency structure changes.</li>
+    <li><strong>Compilation:</strong> Run <code>make cli</code> to compile CLI sources and link them against the library. The makefile automatically manages targets and dependencies.</li>
+  </ol>
+
+  <h2>Benefits</h2>
+  <ul>
+    <li><strong>Consistency:</strong> Integrated headers ensure interface and implementation are always in sync.</li>
+    <li><strong>Modularity:</strong> Each file encapsulates its interface and implementation, reducing coupling.</li>
+    <li><strong>Clarity:</strong> Ad hoc namespaces and standardized extensions improve readability and organization.</li>
+    <li><strong>Efficiency:</strong> The makefile automates builds, minimizing errors and streamlining development.</li>
+  </ul>
+
+  <h2>Conclusion</h2>
+  <p>This document outlines the conventions and practices for writing and building RT C projects. By integrating headers, adopting namespaces, and standardizing extensions, RT ensures its projects are robust, modular, and easy to maintain.</p>
+</div>
+</body>
+</html>

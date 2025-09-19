@@ -1,0 +1,50 @@
+* Project Directory Structure
+  This document explains the naming conventions and layout of the project files.
+
+** 1. Top-Level Directory (`Harmony/`)
+   - aka `$REPO_HOME`, managed by the project administrator.
+
+** 2. Developer Workspace (`Harmony/developer/`)
+   - Contains source code, build scripts, and development tools.
+
+   - **Subdirectories:**
+     - `deprecated/` :: Contains old or refactored files.
+     - `document/` :: Developer-specific documentation.
+     - `javac/` :: Java source code.
+     - `jvm/` :: Compiled Java bytecode (JARs, class files).
+     - `scratchpad/` :: Temporary workspace for builds.
+     - `shell/` :: Executable scripts.
+     - `tool/` :: Development utilities.
+
+** 3. Testing Workspace (`Harmony/tester/`)
+   - Contains test benches, test scripts, and test documentation.
+
+   - **Subdirectories:**
+     - `document/` :: Documentation related to testing.
+     - `javac/` :: Java-based test sources.
+     - `tool/` :: Utilities for testing.
+
+** 4. General Documentation (`Harmony/document/`)
+   - Contains overall project documentation.
+
+** 5. Release Directory (`Harmony/release/`)
+   - The release candidate directory before finalization.
+
+** 6. Shared Tools (`Harmony/tool_shared/`)
+   - Tools shared across different roles.
+
+   - **Subdirectories:**
+     - `bespoke/` :: Custom-built project tools.
+     - `customized/` :: Modified third-party tools.
+     - `document/` :: Tool-related documentation.
+     - `third_party/` :: Unmodified third-party tools.
+
+** 7. Other Files
+   - `LICENSE.txt` :: Project licensing information.
+   - `README.md` :: Project introduction.
+
+** 8. Naming Conventions
+   - Directory names are chosen based on logical properties.
+   - For example, `developer/` contains files *for* the developer.
+   - Plural names are generally avoided unless necessary.
+   - This system minimizes ambiguity and helps developers understand structure intuitively.

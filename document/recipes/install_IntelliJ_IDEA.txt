@@ -1,0 +1,310 @@
+ 
+This file describes the local install and configuration of IntelliJ_IDEA for
+the project with the RT project skeleton.
+
+Project development has been done with ItelliJ and with Emacs. Perhaps
+someone will add more about Eclipse to the install_Eclipse.txt page.
+
+--------------------------------------------------------------------------------
+Some notes
+
+'project directory' - the directory with the .git file in it. Called
+$REPO_HOME in RT scripts. Called $PROJECT_DIR$ in IntelliJ file paths.
+
+'module directory' - for RT projects examples include
+`~/Ariadne/developer' `~/Ariadne/tester`.  These are independent build
+environments.
+
+IntelliJ automatic scanning:
+
+  When selecting `new project` or `new module` the fist time IntelliJ will
+  go off and scan directories.
+
+  My advice, ** uncheck anything it scans ** then hit next.  If you
+  don't hit next, the `new project` or `new module won't be made.
+
+IntelliJ paths on forms:
+
+  I tried using $PROJECT_DIR$ as a variable standing for the project
+  directory, as this was suggested by an AI.  However IntelliJ simply
+  made a directory with the literal variable name. Recommendation:
+  don't use it.
+
+  Also tried using $REPO_HOME, as that was defined in the environment
+  IntelliJ was run from.  Nope, the environment that idea was invoked
+  from seems to be thrown away.
+
+  `~` for the home directories does work. There is one blessing.
+
+  When a file or directory path has a blank on a form, there will be a
+  file navigator icon at the far right in the blank. It does not show
+  when the form is not scrolled all the way to the right.  The browser
+  tool starts from either `/home` or at `/` (the root of the file
+  sytem) rather than at the top of the project. 
+  It inserts absolute path names.
+
+  It seems everything is based on absolute paths, so it will be
+  interesting to see what happens when people download a repo
+  with `.imp` files in it ...
+
+A GUI bug:
+
+  There is a Gnome Linux bug where the drop down menu can stay on top no matter
+  what other window, application, or what virtual desktop a person is on.  You
+  must go back to the IDEA application window and hit <escape> to make it go
+  away.
+
+The [OK] button at the bottom of dialogs:
+
+   This closes the dialog.
+
+   To apply changes hit [Apply].
+
+   [OK] will not save what is on the dialog if [Apply] would fail, but
+   it still closes it.
+
+--------------------------------------------------------------------------------
+To install ItelliJ
+
+  Download the tar file from 
+    `https://www.jetbrains.com/idea/download/?section=linux` 
+  into the
+    `$REPO_HOME/tool_shared/third_party/upstream`
+   directory.
+
+  Expand it into 
+    `$REPO_HOME/tool_shared/third_party` 
+  
+  cd into the expanded directory, into `bin`, then `chmod u+x` and run `idea_inst`.
+
+  set the env path to include 
+    `$REPO_HOME/tool_shared/third_party/idea-IC*/bin`
+
+  The executable is called `idea`.
+
+  Consider setting a desktop short cut. Consider instead installing it in your
+  own bin directory. Easily done, just move the directory created by the tar
+  file expansion there.
+
+  I prefer a user mode install, as there is no reason this tool should need
+  admin privileges.
+
+--------------------------------------------------------------------------------
+Startup
+
+  ./tool_shared/third_party/idea-IC-243.21565.193/bin/idea &
+
+  Shows: Welcome screen
+    select "Open" as Ariadne already exists
+
+  Shows: Open File or Project Browser
+    In top dialog box put full path to project directory.
+
+    Hit [OK] at the bottom. Unlikely, but might be scrolled off the bottom of the screen.
+
+  Shows: main window
+     Appears after hitting OK from the "Open File or Project" [ok].
+
+     Has a tool bar at the top. There is a double meat hamburger menu icon
+     at the left. Hitting this will replace the top bar with a vertical
+     menu for drop down menus.
+
+     Careful, after the hamburger icon is pressed, the first drop down
+     menu instantly appears. Slide over to get the other drop downs.
+     Don't click, slide!
+
+     Under tool bar:
+       Far left is an icon bar.  Then a file browser.  And then a big box
+       describing hot keys.
+
+--------------------------------------------------------------------------------
+Configuration
+
+If you cloned the Ariadne project, the modules will already be configured, and
+also probably some of the run configuration will already be configured.
+
+If you add a project, or modules, know that is possible to go back and
+change settings, except perhaps for the Project directory, I've not tried
+that yet.
+
+It will on occasion add directories.  I have multiple language setup with
+source in javac.  Though the directory 'src' is not in the configuration,
+IntelliJ like to create it then refuse to delete it, so after configuring I
+then go back and delete it with `rmdir`. Sometimes it shows in the file
+browser though it is not there.
+
+  -------------
+  Setup Project
+  Hamburger icon > File dop-down > Project Structure > Project
+
+    select project SDK from disk:
+      ~/Ariadne/tool_shared/third_party/jdk-11
+
+  -------------
+  Setup Modules
+
+    Hamburger icon > File dop-down > Project Structure > Modules
+
+      Shows: "Project Structure" dialog
+
+       Hit the '+' option that shows at the top of the second panel. There is
+       no description of what it does. Mouse over just says 'add'.  It is
+       there with a couple of other icons.  After modules are added they will
+       be listed in this panel.
+
+       New Module.
+
+       Dialog pop-up
+
+          Name: developer
+
+          Location: This will be the project directory. As examples,
+          ~/Ariadne or ~/Harmony.
+          
+          Dependencies, there will then be a drop down.
+
+            Sometimes is suggests the "Project SDK" at the top. If so select that.
+
+            Sometimes it allows select from disk, is so enter  ~/<project>/tool_shared/third_party/.
+
+            Other times it shows a discovered directory that is the same as
+            the one I suggest browsing to.
+
+          Careful, the module won't be made until hitting [Create] at the bottom.
+
+          As far as I can tell you can't get this panel again, rather delete and add
+          a new module if you need to change the entries.
+
+      Shows: "Project Structure" dialog, again, now the third panel with
+      information about the developer module.  Third panel shows three
+      choices: [Source] [Paths] [Dependencies]
+
+          [Sources] comming up with the source dialog is the default, but that does
+          not mean the [Sources] button has been pushed. 
+
+              With Sources there are two panels.
+
+              In second panel, on right side, the module root should show at the top.
+              Under if it lists any sources, use the button at the far right of the
+              listing to x it out anything that IntelliJ has automatically added.
+
+              The first panel now shows a file browser for the module.
+
+                Select the `javac` directory with a single click. Then, and only
+                after, look immediately the directory lists and click on [Sources] 
+
+                When the [Source] button on the sources dialog has been
+                pushed it will turn colors and gain a border when pushed. The
+                [Sources] button must be pushed, or selected source
+                directories will not be applied. Selecting a directory and
+                hitting [OK] will not save anything, and will close the
+                dialog.
+
+                "Source Folders" will now appear in the second panel. The
+                javac folder will be listed. Hhit: [apply] at the
+                bottom. [apply] will then turn colors to show that there is
+                nothing more to apply.
+
+
+          Slide over to [Paths]      
+              Copmiler Output
+                select [Use Module Compile Output Path]
+                   Output Path: $PROJECT_DIR$/developer/scratchpad
+                   Test Path: $PROJECT_DIR$/developer/test
+
+                   leave the exclude output checkbox, that means to exclude from repo
+                   and from indexing for search
+
+              hit: [apply] at the bottom
+
+          Add the `log` directory to [Resources], if you have one.
+
+          After setting 'scratchpad' as the output directory on the [paths]
+          configuration form, and leaving `scratchpad` as excluded via
+          the checkbox. You can not then on the Sources form add
+          `scratchpad` to the 'Excluded' list. Though it is excluded, it
+          does not show there.
+
+          After hitting [OK] the dialog disappears. Go back and check that everything
+          you set is there. It seems common that for some reason, perhaps the order
+          of hitting buttons, that settings are not there when going back.
+
+--------------------------------------------------------------------------------
+Integrating programs from the project
+
+    -------------
+    Local tests and tools.
+
+    This section is for adding an external tool, for example `tester/tool/make`, which
+    builds Harmony tests.
+
+    Hamburger> Run > edit configurations
+    Shows Run/Debug configurations dialog
+       Upper left hit '+'
+       Shows drop down
+         choose [Shell Script] second from bottom
+         Shows dialog, for example:
+           Name: tester-developer make
+
+           Script Path: ~/Ariadne/env_run (better to chose with the
+             file browser tool)
+
+           Script Options: tester make
+
+           Working Directory: ~/Ariadne (location of the env source scripts
+             that env_run uses)
+
+           Environment variabls:  (none, env_run will source env_tester)
+
+           Interpreter: /bin/bash  (left to default)
+
+     For debugging to work for the tests, they need to be run with
+     java listening:
+
+       java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005 $file
+
+     I've included this in the bash wrappers made by make.
+
+  -------------
+  To add an "Application"
+
+    Humburger > Run > edit configurations
+    Shows Run/Debug configurations dialog
+       Upper left hit '+'
+       Shows drop down
+         chose [Application] first choice
+         Shows dialog, for example:
+         Name: Test_Graph_0
+
+         next line are two boxes, they are not labeled, the defaults show:
+         [ module not specified ] [ -cp no module ]
+           I selected::
+           [ java 11 SDk of 'tester' module]  [ -cp tester ]
+             This can be confusing, as the modules are 'tester' and 'developer', but
+             here it asks for an SDK! Then the next box says it wants a class path,
+             but it wants a module name!
+
+         next line one box, not labeled
+         [ main class [] ]
+           Note icon at right, it will give a list of class names, here in the tester module,
+           that have main calls, select one.
+
+         next line, again not labeled
+         [ Program Arguments ]
+           Test_Graph_0 has no arguments so I left it blank.
+
+         Working Directory: ~/Ariadne
+
+         Environment Variables:
+           Left blank because the executable itself does not make use of any. I do
+           know at this point if variables set in the environment IDEA ran in are
+           inherited.
+
+         'Modify Options' with a drop down menu. (At the top right of the configuration dialog)
+           Scan down for the `Java` section.
+           Check: 'Do not build before run'
+             (To build this example, go to the Run menu and run `tester
+             make'. Or run make directly from a console prompt. Be sure to
+             source env_tester first.)
+
+

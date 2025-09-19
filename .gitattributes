@@ -1,0 +1,29 @@
+# Normalize line endings for a cross-platform dev team
+* text=auto eol=lf
+
+# Common sources/scripts
+*.sh     eol=lf
+*.bash   eol=lf
+*.py     eol=lf
+*.org    linguist-language=Org
+*.md     linguist-language=Markdown
+*.c      linguist-language=C
+*.cc     linguist-language=C++
+
+# RT file-type conventions (classify custom suffixes correctly)
+*.lib.c  linguist-language=C
+*.cli.c  linguist-language=C
+*.lib.cc linguist-language=C++
+*.cli.cc linguist-language=C++
+
+# Keep empty-dir sentinels and build scratch out of release archives
+**/.githolder export-ignore
+scratchdir/       export-ignore
+
+# Housekeeping not needed in source releases
+.gitignore        export-ignore
+.editorconfig     export-ignore
+
+# Treat license templates as text (and include them by default)
+LICENSES/* text
+document/licenses/* text
