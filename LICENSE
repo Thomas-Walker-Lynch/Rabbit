@@ -1,5 +1,8 @@
-Copyright (c) 2025 Thomas Walker Lynch.
-All rights reserved.
+This project is multi-licensed. You may use it under the terms of **one** of:
+  - MIT
+  - Apache License, Version 2.0
+  - LicenseRef-RT-Commercial
+  - LicenseRef-TWL-Personal-NC
 
-This source code is made available for inspection only.
-No permission is granted to use, copy, modify, or distribute it in any form without explicit written permission.
+Choose the option that best fits your use. See LICENSES/ for full texts.
+SPDX-License-Identifier: MIT OR Apache-2.0 OR LicenseRef-RT-Commercial OR LicenseRef-TWL-Personal-NC

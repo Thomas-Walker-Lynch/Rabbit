@@ -1,0 +1,43 @@
+LicenseRef-TWL-Personal-NC (Personal Non-Commercial License)
+
+Copyright (c) 2025 Thomas Walker Lynch
+
+Permission is hereby granted to any natural person ("You") to use, copy, and
+modify the Software for personal, non-commercial purposes, subject to the
+following conditions:
+
+1. Non-Commercial Use. "Non-commercial" means: no direct or indirect
+   remuneration, revenue, sponsorship, or consideration is received in
+   connection with Your use, copies, modifications, or deployments of the
+   Software. Academic teaching and personal research are deemed non-commercial.
+
+2. Redistribution. You may redistribute unmodified copies of the Software, or
+   Your modifications, for non-commercial purposes only, provided that:
+   (a) this license text and the copyright notice are included in all copies;
+   (b) a clear notice of any changes is included; and
+   (c) You do not misrepresent authorship or sponsorship.
+
+3. No SaaS or Production Hosting. Operating the Software as a network service
+   accessible by others (hosted or SaaS) is deemed commercial unless you have
+   obtained written permission from the copyright holder.
+
+4. No Trademark License. This license does not grant rights to use names,
+   logos, or trademarks of the authors or Reasoning Technology Inc.
+
+5. Termination. Any breach terminates Your rights under this license
+   automatically. Upon termination, You must cease use and distribution.
+
+6. Warranty Disclaimer. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+7. Limitation of Liability. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+8. Compatibility. This license is not OSI-approved and may be incompatible
+   with certain open-source distribution requirements. If in doubt, use MIT
+   or Apache-2.0 instead, or contact the author for a different grant.
+
+SPDX-Identifier: LicenseRef-TWL-Personal-NC

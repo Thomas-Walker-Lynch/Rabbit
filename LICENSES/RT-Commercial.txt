@@ -1,0 +1,31 @@
+LicenseRef-RT-Commercial (Reasoning Technology Commercial License)
+
+Copyright (c) 2025 Reasoning Technology Inc.
+
+Subject to a valid commercial agreement with Reasoning Technology Inc.
+("RT"), RT grants the licensee identified in that agreement ("Licensee")
+a worldwide, non-exclusive license to:
+
+  (a) use, reproduce, modify, and create derivative works of the Software;
+  (b) make internal deployments of the Software and derivative works; and
+  (c) redistribute the Software and derivative works in object or source form
+      as permitted by the executed commercial agreement.
+
+Restrictions. Except as expressly permitted in the executed agreement,
+Licensee may not sublicense, resell, or offer the Software as a service to
+third parties, and may not remove or alter copyright, license, or NOTICE
+statements.
+
+Support, updates, warranty, and indemnities (if any) are governed solely by
+the executed commercial agreement. Absent such agreement, no rights are
+granted under this license.
+
+NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+EXCEPT AS MAY BE EXPRESSLY STATED IN THE EXECUTED COMMERCIAL AGREEMENT.
+
+LIMITATION OF LIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT
+SHALL RT OR THE AUTHORS BE LIABLE FOR ANY CLAIMS OR DAMAGES, EXCEPT AS MAY BE
+EXPRESSLY PROVIDED IN THE EXECUTED COMMERCIAL AGREEMENT.
+
+For commercial licensing, contact: licensing@ReasoningTechnology.com
+SPDX-Identifier: LicenseRef-RT-Commercial
