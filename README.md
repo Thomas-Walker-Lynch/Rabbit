@@ -1,4 +1,4 @@
-# Harmony — RT project skeleton
+# Rabbit 
 
 Project based on the RT Harmony skeleton.
 
