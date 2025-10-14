@@ -4,5 +4,6 @@
 # But don't ignore the .gitignore file itself
 !/.gitignore
 
-# keep the upstream directory
-!/upstream
+# But don't ignore the patch files
+!/patch
+

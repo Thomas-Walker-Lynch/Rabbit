@@ -8,6 +8,9 @@ fi
 # without this bash takes non-matching globs literally
 shopt -s nullglob
 
+# does not presume sharing or world permissions
+umask 0077
+
 # --------------------------------------------------------------------------------
 # project definition
 

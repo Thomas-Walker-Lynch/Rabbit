@@ -1,0 +1,8 @@
+diff --git a/release/gcc b/release/gcc
+new file mode 120000
+index 0000000..530a522
+--- /dev/null
++++ b/release/gcc
+@@ -0,0 +1 @@
++amd64_Deb-12.10_gcc-12.4.1/
+\ No newline at end of file
