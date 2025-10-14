@@ -1,41 +1,42 @@
 #!/usr/bin/env bash
+
 script_afp=$(realpath "${BASH_SOURCE[0]}")
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "$script_afp:: This script must be sourced, not executed."
   exit 1
 fi
 
-# project environment is ROLE agnostic
-source tool_shared/bespoke/env
-export ROLE=developer
+# enter project environment
+#
+  source tool_shared/bespoke/env
 
 # setup tools
+#
+  export PYTHON_HOME="$REPO_HOME/tool_shared/third_party/python"
+  if [[ ":$PATH:" != *":$PYTHON_HOME/bin:"* ]]; then
+    export PATH="$PYTHON_HOME/bin:$PATH"
+  fi
 
-export PYTHON_HOME="$REPO_HOME/tool_shared/third_party/python"
-if [[ ":$PATH:" != *":$PYTHON_HOME/bin:"* ]]; then
-  export PATH="$PYTHON_HOME/bin:$PATH"
-fi
+  RT_gcc="$REPO_HOME/tool_shared/third_party/RT_gcc/release"
+  if [[ ":$PATH:" != *":$RT_gcc:"* ]]; then
+    export PATH="$RT_gcc:$PATH"
+  fi
 
-RT_gcc="$REPO_HOME/tool_shared/third_party/RT_gcc/release"
-if [[ ":$PATH:" != *":$RT_gcc:"* ]]; then
-  export PATH="$RT_gcc:$PATH"
-fi
+# enter the role environment
+#
+  export ROLE=developer
 
-# include the developer/tool directory and env
+  tool="$REPO_HOME/$ROLE/tool"
+  if [[ ":$PATH:" != *":$tool:"* ]]; then
+    export PATH="$tool:$PATH"
+  fi
 
-dev_tool=$REPO_HOME/developer/tool
-if [[ ":$PATH:" != *":$dev_tool:"* ]]; then
-  export PATH="$dev_tool:$PATH"
-fi
+  export ENV=$ROLE/tool/env
 
-if [[ -f "$ROLE/tool/env" ]]; then
-  source "$ROLE/tool/env"
-else
   cd "$ROLE"
-fi
-
-export ENV=$ROLE
-echo "in environmennt: $ENV"
-
-
-
+  if [[ -f "tool/env" ]]; then
+    source "tool/env"
+    echo "in environment: $ENV"
+  else
+    echo "not found: $ENV"
+  fi

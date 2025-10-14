@@ -1,0 +1,2 @@
+scratchpad/noop.lib.o: cc/noop.lib.c \
+ /home/Thomas/subu_data/developer/project/Linux/Rabbit/tool_shared/third_party/RT-project-share/release/make/RT_0.h

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+script_afp=$(realpath "${BASH_SOURCE[0]}")
+
+# before running this, make library is built and is in the scratchpad directory
+
+# input guards
+
+  env_must_be="developer/tool/env"
+  if [ "$ENV" != "$env_must_be" ]; then
+    echo "$(script_fp):: error: must be run in the $env_must_be environment"
+    exit 1
+  fi
+
+  cd "$REPO_HOME"/developer || exit 1
+
+  if [ ! -d scratchpad ]; then
+    echo "$(script_fp):: no scratchpad directory"
+    exit 1
+  fi
+
+#set -e
+#set -x
+
+  release_dir=$(release_dir)
+  mkdir -p ${release_dir}
+
+  install_file scratchpad/libN.a ${release_dir} "ug+r"  || true
+  install_file cc/*.lib.c ${release_dir} "ug+r"  || true
+  install_file cc/*.lib.c ${release_dir} "ug+r" || true
+
+#set +x
+echo "$(script_fn) done."
+
