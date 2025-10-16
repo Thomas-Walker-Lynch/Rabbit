@@ -1,11 +1,31 @@
+# developer/tool/makefile — Orchestrator (Hybrid)
 
-RT-INCOMMON:=$(REPO_HOME)/release
+ifndef REPO_HOME
+  $(error REPO_HOME is not set; source your project env (tool_shared/bespoke/env) first)
+endif
 
-include $(RT-INCOMMON)/make/environment_RT_0
+RT_INCOMMON := $(REPO_HOME)/tool_shared/third_party/RT-project-share/release
+include $(RT_INCOMMON)/make/environment_RT_1.mk
 
-CFLAGS+=-Werror -include "$(RT-INCOMMON)/make/RT_0.h"
-LINKFLAGS+= -l$(PROJECT)
-LIBFILE=$(LIBDIR)/lib$(PROJECT).a
+.PHONY: all usage lib_cli kmod clean check-pwd
+all: lib_cli kmod
 
-include $(RT-INCOMMON)/make/targets_developer
--include $(DEPFILE)
+usage:
+	@printf "Usage: make [usage|lib_cli|kmod|clean|check-pwd]\n"; exit 2
+
+# Build user-space static lib + CLI (cli target builds lib first)
+lib_cli:
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk cli
+
+# Build all kernel modules
+kmod:
+	@$(MAKE) -f $(RT_INCOMMON)/make/targets_kmod.mk kmod
+
+clean:
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk clean
+	@$(MAKE) -f $(RT_INCOMMON)/make/targets_kmod.mk clean
+
+check-pwd:
+	@if [ "$(CURDIR)" != "$(REPO_HOME)/developer" ]; then \
+	  printf "warn: CURDIR=%s (expected %s)\n" "$(CURDIR)" "$(REPO_HOME)/developer"; \
+	fi
