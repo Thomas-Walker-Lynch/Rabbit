@@ -1,2 +1,7 @@
-scratchpad/noop.lib.o: cc/noop.lib.c \
+scratchpad/no-op.lib.o: cc/no-op.lib.c \
  /home/Thomas/subu_data/developer/project/Linux/Rabbit/tool_shared/third_party/RT-project-share/release/make/RT_0.h
+scratchpad/hello.cli.o: cc/hello.cli.c \
+ /home/Thomas/subu_data/developer/project/Linux/Rabbit/tool_shared/third_party/RT-project-share/release/make/RT_0.h
+
+machine/hello : scratchpad/hello.cli.o scratchpad/libRabbit.a
+	gcc -o machine/hello scratchpad/hello.cli.o -Lscratchpad -L/lib64 -L/lib -lRabbit

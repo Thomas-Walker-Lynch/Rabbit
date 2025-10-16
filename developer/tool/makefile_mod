@@ -1,0 +1,27 @@
+# tool/makefile
+
+RT_project_share:=$(REPO_HOME)/tool_shared/third_party/RT-project-share/release
+include $(RT_project_share)/make/environment_RT_0
+
+KBUILD_SRCDIR_List := $(SRCDIR_List)
+KBUILD_SRC_List := $(foreach dir, $(KBUILD_SRCDIR_List), $(wildcard $(dir)/*.mod.c))
+KBUILD_BASE_List := $(sort $(patsubst %.mod.c, %, $(notdir $(KBUILD_SRC_List))))
+
+DEPFILE := $(TMPDIR)/makefile-cc.deps
+
+-include $(DEPFILE)
+include $(RT_project_share)/make/targets_developer
+include $(RT_project_share)/make/targets_kernel
+
+# ----------------------------------------------------------------------
+# --- PUBLIC TARGET ORCHESTRATION (Must be last to win precedence) ---
+# ----------------------------------------------------------------------
+
+# 1. DEFAULT TARGET: Make the 'all' target the default for running 'make'.
+#    This must be defined last to override the 'all: usage' from the included targets files.
+.PHONY: all
+all: kernel_module
+
+# 2. CLEAN TARGET: Orchestrate the cleanup process.
+.PHONY: clean
+clean: clean_developer clean_kernel
