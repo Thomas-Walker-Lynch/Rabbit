@@ -18,10 +18,42 @@ script_afp=$(realpath "${BASH_SOURCE[0]}")
 #set -e
 #set -x
 
+cd "$REPO_HOME/developer"
+
 release_dir="$REPO_HOME/release"
+ko_dir="scratchpad/kmod"
+machine_executable_list="scratchpad/hello"
 
-mkdir -p ${release_dir}/kmod && install -m 0600 scratchpad/*.ko   "${release_dir}/kmod/"
-install -m 0700 scratchpad/hello  "${release_dir}/machine/"
+# Enable nullglob so an empty match yields an empty list (not the literal pattern)
+shopt -s nullglob
 
-echo "$(script_fn) done."
+# zero or more machine executables
+for fglob in $machine_executable_list; do
+  # nesting the loop allows that $fglob is a file glob, and expands it
+  for f in $fglob; do
+    if [[ -x "$f" ]]; then
+      echo "+ install -m 0500 '$f' '$release_dir/machine/'"
+      install -m 0550 "$f" "$release_dir/machine/"
+    else
+      echo "(info) did not find '$f'"
+    fi
+  done
+done
 
+# zero or more Kernel modules
+# release/kmod created 750 so developer can write to it, group can read it
+ko_list=("$ko_dir"/*.ko)
+if (( ${#ko_list[@]} )); then
+  if [[ ! -d "$release_dir/kmod" ]]; then
+    echo "+ install -d '$release_dir/kmod'"
+    install -m 750 -d "$release_dir/kmod"
+  fi
+  for f in "${ko_list[@]}"; do
+    echo "+ install -m 0440 '$f' '$release_dir/kmod/'"
+    install -m 440 "$f" "$release_dir/kmod/"
+  done
+else
+  echo "(info) no kmod artifacts found in $ko_dir; skipping kmod release"
+fi
+
+echo "$script_fn done."

@@ -9,7 +9,7 @@ fi
 shopt -s nullglob
 
 # does not presume sharing or world permissions
-umask 0077
+umask 0027
 
 # --------------------------------------------------------------------------------
 # project definition
