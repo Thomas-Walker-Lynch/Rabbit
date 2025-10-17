@@ -19,11 +19,11 @@ lib_cli:
 
 # Build all kernel modules
 kmod:
-	@$(MAKE) -f $(RT_INCOMMON)/make/targets_kmod.mk kmod
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk kmod
 
 clean:
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk clean
-	@$(MAKE) -f $(RT_INCOMMON)/make/targets_kmod.mk clean
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk clean
 
 check-pwd:
 	@if [ "$(CURDIR)" != "$(REPO_HOME)/developer" ]; then \

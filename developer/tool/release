@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 script_afp=$(realpath "${BASH_SOURCE[0]}")
 
-# before running this, make library is built and is in the scratchpad directory
+# This is a bespoke script for copying files into ../release.
+# Files in ../release can be used by the tester role.
+# On a release branch, files in the ../release constitute the public release.
 
-# input guards
+# conventional preliminaries
 
   env_must_be="developer/tool/env"
   if [ "$ENV" != "$env_must_be" ]; then
@@ -13,21 +15,13 @@ script_afp=$(realpath "${BASH_SOURCE[0]}")
 
   cd "$REPO_HOME"/developer || exit 1
 
-  if [ ! -d scratchpad ]; then
-    echo "$(script_fp):: no scratchpad directory"
-    exit 1
-  fi
-
 #set -e
 #set -x
 
-  release_dir=$(release_dir)
-  mkdir -p ${release_dir}
+release_dir="$REPO_HOME/release"
 
-  install_file scratchpad/libN.a ${release_dir} "ug+r"  || true
-  install_file cc/*.lib.c ${release_dir} "ug+r"  || true
-  install_file cc/*.lib.c ${release_dir} "ug+r" || true
+mkdir -p ${release_dir}/kmod && install -m 0600 scratchpad/*.ko   "${release_dir}/kmod/"
+install -m 0700 scratchpad/hello  "${release_dir}/machine/"
 
-#set +x
 echo "$(script_fn) done."
 
