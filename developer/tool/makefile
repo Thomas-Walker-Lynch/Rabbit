@@ -1,31 +1,49 @@
+.SUFFIXES:
 # developer/tool/makefile — Orchestrator (Hybrid)
-
-ifndef REPO_HOME
-  $(error REPO_HOME is not set; source your project env (tool_shared/bespoke/env) first)
-endif
 
 RT_INCOMMON := $(REPO_HOME)/tool_shared/third_party/RT-project-share/release
 include $(RT_INCOMMON)/make/environment_RT_1.mk
 
-.PHONY: all usage lib_cli kmod clean check-pwd
-all: lib_cli kmod
-
+.PHONY: usage 
 usage:
-	@printf "Usage: make [usage|lib_cli|kmod|clean|check-pwd]\n"; exit 2
+	@printf "Usage: make [usage|information|all|lib|cli|kmod|clean]\n"; exit 2
 
-# Build user-space static lib + CLI (cli target builds lib first)
-lib_cli:
+.PHONY: version 
+version:
+	@echo tool/makefile version 2.0
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk version
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk version
+
+.PHONY: information
+information:
+	@printf "local ----------------------------------------\n"
+	-@echo CURDIR='$(CURDIR)'
+	@echo REPO_HOME="$(REPO_HOME)"
+	@echo KMOD_BUILD_DIR="/lib/modules/$(shell uname -r)/build"
+	@echo CURDIR="$(CURDIR)"
+	@printf "target_lib_cli.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk information
+	@printf "target_kmod.mk ----------------------------------------\n"
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk information
+
+.PHONY: all
+all: lib cli kmod
+
+.PHONY: lib
+lib:
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk lib
+
+.PHONY: cli
+cli:
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk cli
 
-# Build all kernel modules
+.PHONY: kmod
 kmod:
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk kmod
 
+.PHONY: clean
 clean:
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk clean
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk clean
 
-check-pwd:
-	@if [ "$(CURDIR)" != "$(REPO_HOME)/developer" ]; then \
-	  printf "warn: CURDIR=%s (expected %s)\n" "$(CURDIR)" "$(REPO_HOME)/developer"; \
-	fi
+
