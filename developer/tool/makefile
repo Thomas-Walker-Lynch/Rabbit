@@ -6,7 +6,7 @@ include $(RT_INCOMMON)/make/environment_RT_1.mk
 
 .PHONY: usage 
 usage:
-	@printf "Usage: make [usage|information|all|lib|cli|kmod|clean]\n"; exit 2
+	@printf "Usage: make [usage|information|all|lib|cli|kmod|clean]\n"
 
 .PHONY: version 
 version:
@@ -29,13 +29,13 @@ information:
 .PHONY: all
 all: lib cli kmod
 
-.PHONY: lib
-lib:
-	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk lib
+.PHONY: library lib
+library lib:
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_library_cli.mk library
 
 .PHONY: cli
 cli:
-	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk cli
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_library_cli.mk cli
 
 .PHONY: kmod
 kmod:
@@ -43,7 +43,7 @@ kmod:
 
 .PHONY: clean
 clean:
-	@$(MAKE) -f $(RT_INCOMMON)/make/target_lib_cli.mk clean
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_library_cli.mk clean
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk clean
 
 
