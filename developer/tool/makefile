@@ -49,8 +49,6 @@ kmod:
 clean:
 	@printf "local ----------------------------------------\n"
 	@printf "target_library_CLI.mk ----------------------------------------\n"
-	@$(MAKE) -f $(RT_INCOMMON)/make/target_library_CLI.mk clean
+	@$(MAKE) -f $(RT_INCOMMON)/make/target_library_cli.mk clean
 	@printf "target_kmod.mk ----------------------------------------\n"
 	@$(MAKE) -f $(RT_INCOMMON)/make/target_kmod.mk clean
-
-
