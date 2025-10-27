@@ -10,6 +10,7 @@
 #include <linux/netfilter_ipv4.h>
 #include <linux/ip.h>
 #include <net/sock.h>
+#include <net/inet_sock.h>
 
 #define RABBIT_UID 2017
 #define DEV_NAME   "US"   /* WireGuard iface to force */

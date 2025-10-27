@@ -10,6 +10,7 @@
 #include <linux/netfilter_ipv4.h>
 #include <linux/netfilter_ipv6.h>
 #include <net/sock.h>
+#include <net/inet_sock.h>
 
 /* Hardcoded target UID */
 #define RABBIT_UID 2017
