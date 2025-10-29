@@ -1,56 +1,287 @@
-#!/usr/bin/env bash
-script_afp=$(realpath "${BASH_SOURCE[0]}")
+#!/usr/bin/env -S python3 -B
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
 
-# This is a bespoke script for copying files into ../release.
-# Files in ../release can be used by the tester role.
-# On a release branch, files in the ../release constitute the public release.
+import os, sys, shutil, stat, pwd, grp, glob, tempfile
 
-# conventional preliminaries
+HELP = """usage: release {write|clean|ls|help|dry write} [DIR]
+  write [DIR]   Writes released files into $REPO_HOME/release. If [DIR] is specified, only writes files found in scratchpad/DIR.
+  clean [DIR]   Remove the contents of the release directories. If [DIR] is specified, clean only the contents of that release directory.
+  ls            List release/ as an indented tree: PERMS  OWNER  NAME (root-level dotfiles printed first).
+  help          Show this message.
+  dry write [DIR]
+                Preview what write would do without modifying the filesystem.
+"""
 
-  env_must_be="developer/tool/env"
-  if [ "$ENV" != "$env_must_be" ]; then
-    echo "$(script_fp):: error: must be run in the $env_must_be environment"
-    exit 1
-  fi
+ENV_MUST_BE = "developer/tool/env"
+DEFAULT_DIR_MODE = 0o750
+PERM_BY_DIR = {
+  "kmod":    0o440,
+  "machine": 0o550,
+  "python3": 0o550,
+  "shell":   0o550,
+}
 
-  cd "$REPO_HOME"/developer || exit 1
+def exit_with_status(msg, code=1):
+  print(f"release: {msg}", file=sys.stderr)
+  sys.exit(code)
 
-#set -e
-#set -x
+def assert_env():
+  env = os.environ.get("ENV", "")
+  if env != ENV_MUST_BE:
+    hint = (
+      "ENV is not 'developer/tool/env'.\n"
+      "Enter the project with:  source ./env_developer\n"
+      "That script exports: ROLE=developer; ENV=$ROLE/tool/env"
+    )
+    exit_with_status(f"bad environment: ENV='{env}'. {hint}")
 
-cd "$REPO_HOME/developer"
+def repo_home():
+  rh = os.environ.get("REPO_HOME")
+  if not rh:
+    exit_with_status("REPO_HOME not set (did you 'source ./env_developer'?)")
+  return rh
 
-release_dir="$REPO_HOME/release"
-ko_dir="scratchpad/kmod"
-machine_executable_list="scratchpad/hello"
+def dpath(*parts):
+  return os.path.join(repo_home(), "developer", *parts)
 
-# Enable nullglob so an empty match yields an empty list (not the literal pattern)
-shopt -s nullglob
+def rpath(*parts):
+  return os.path.join(repo_home(), "release", *parts)
 
-# zero or more machine executables
-for f in $machine_executable_list; do
-  if [[ -x "$f" ]]; then
-    echo "+ install -m 0500 '$f' '$release_dir/machine/'"
-    install -m 0550 "$f" "$release_dir/machine/"
-  else
-    echo "(info) did not find '$f'"
-  fi
-done
+def dev_root():
+  return dpath()
 
-# zero or more Kernel modules
-# release/kmod created 750 so developer can write to it, group can read it
-ko_list=("$ko_dir"/*.ko)
-if (( ${#ko_list[@]} )); then
-  if [[ ! -d "$release_dir/kmod" ]]; then
-    echo "+ install -d '$release_dir/kmod'"
-    install -m 750 -d "$release_dir/kmod"
-  fi
-  for f in "${ko_list[@]}"; do
-    echo "+ install -m 0440 '$f' '$release_dir/kmod/'"
-    install -m 440 "$f" "$release_dir/kmod/"
-  done
-else
-  echo "(info) no kmod artifacts found in $ko_dir; skipping kmod release"
-fi
+def rel_root():
+  return rpath()
 
-echo "$script_fn done."
+def _display_src(p_abs: str) -> str:
+  # Developer paths shown relative to $REPO_HOME/developer
+  try:
+    if os.path.commonpath([dev_root()]) == os.path.commonpath([dev_root(), p_abs]):
+      return os.path.relpath(p_abs, dev_root())
+  except Exception:
+    pass
+  return p_abs
+
+def _display_dst(p_abs: str) -> str:
+  # Release paths shown as literal '$REPO_HOME/release/<rel>'
+  try:
+    rel = os.path.relpath(p_abs, rel_root())
+    rel = "" if rel == "." else rel
+    return "$REPO_HOME/release" + ("/" + rel if rel else "")
+  except Exception:
+    return p_abs
+
+def ensure_mode(path, mode):
+  try: os.chmod(path, mode)
+  except Exception: pass
+
+def ensure_dir(path, mode=DEFAULT_DIR_MODE, dry=False):
+  if dry:
+    if not os.path.isdir(path):
+      shown = _display_dst(path) if path.startswith(rel_root()) else (
+        os.path.relpath(path, dev_root()) if path.startswith(dev_root()) else path
+      )
+      print(f"(dry) mkdir -m {oct(mode)[2:]} '{shown}'")
+    return
+  os.makedirs(path, exist_ok=True)
+  ensure_mode(path, mode)
+
+def filemode(m):
+  try: return stat.filemode(m)
+  except Exception: return oct(m & 0o777)
+
+def owner_group(st):
+  try: return f"{pwd.getpwuid(st.st_uid).pw_name}:{grp.getgrgid(st.st_gid).gr_name}"
+  except Exception: return f"{st.st_uid}:{st.st_gid}"
+
+# ---------- LS with two-pass column width for owner:group ----------
+def list_tree(root):
+  if not os.path.isdir(root):
+    return
+
+  # gather entries in display order, record owner:group widths
+  entries = []  # list of (is_dir, depth, perms, ownergrp, name)
+  def gather(path: str, depth: int, is_root: bool):
+    try:
+      it = list(os.scandir(path))
+    except FileNotFoundError:
+      return
+    dirs  = [e for e in it if e.is_dir(follow_symlinks=False)]
+    files = [e for e in it if not e.is_dir(follow_symlinks=False)]
+    dirs.sort(key=lambda e: e.name)
+    files.sort(key=lambda e: e.name)
+
+    if is_root:
+      # root-level: dotfiles first
+      for f in (e for e in files if e.name.startswith(".")):
+        st = os.lstat(f.path)
+        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
+      for d in dirs:
+        st = os.lstat(d.path)
+        entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
+        gather(d.path, depth + 1, False)
+      for f in (e for e in files if not e.name.startswith(".")):
+        st = os.lstat(f.path)
+        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
+    else:
+      # subdirs: dirs then files (dotfiles naturally sort first)
+      for d in dirs:
+        st = os.lstat(d.path)
+        entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
+        gather(d.path, depth + 1, False)
+      for f in files:
+        st = os.lstat(f.path)
+        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
+
+  gather(root, depth=1, is_root=True)
+
+  # compute max width for owner:group column
+  ogw = 0
+  for (_isdir, _depth, _perms, ownergrp, _name) in entries:
+    if len(ownergrp) > ogw:
+      ogw = len(ownergrp)
+
+  # print
+  print("release/")
+  for (isdir, depth, perms, ownergrp, name) in entries:
+    indent = "  " * depth
+    # perms first, owner:group padded next, then name with tree indent
+    print(f"{perms}  {ownergrp:<{ogw}}  {indent}{name}")
+
+# ---------- end LS ----------
+
+def iter_src_files(topdir, src_root):
+  base = os.path.join(src_root, topdir) if topdir else src_root
+  if not os.path.isdir(base):
+    return
+    yield
+  if topdir == "kmod":
+    for p in sorted(glob.glob(os.path.join(base, "*.ko"))):
+      yield (p, os.path.basename(p))
+  else:
+    for root, dirs, files in os.walk(base):
+      dirs.sort(); files.sort()
+      for fn in files:
+        src = os.path.join(root, fn)
+        rel = os.path.relpath(src, base)
+        yield (src, rel)
+
+def target_mode(topdir):
+  return PERM_BY_DIR.get(topdir, 0o440)
+
+def copy_one(src_abs, dst_abs, mode, dry=False):
+  src_show = _display_src(src_abs)
+  dst_show = _display_dst(dst_abs)
+  parent = os.path.dirname(dst_abs)
+  os.makedirs(parent, exist_ok=True)
+
+  if dry:
+    if os.path.exists(dst_abs):
+      print(f"(dry) unlink '{dst_show}'")
+    print(f"(dry) install -m {oct(mode)[2:]} -D '{src_show}' '{dst_show}'")
+    return
+
+  # Replace even if dst exists and is read-only: write temp then atomic replace.
+  fd, tmp_path = tempfile.mkstemp(prefix=".tmp.", dir=parent)
+  try:
+    with os.fdopen(fd, "wb") as tmpf, open(src_abs, "rb") as sf:
+      shutil.copyfileobj(sf, tmpf)
+      tmpf.flush()
+    os.chmod(tmp_path, mode)
+    os.replace(tmp_path, dst_abs)
+  finally:
+    try:
+      if os.path.exists(tmp_path):
+        os.unlink(tmp_path)
+    except Exception:
+      pass
+
+  print(f"+ install -m {oct(mode)[2:]} '{src_show}' '{dst_show}'")
+
+def write_one_dir(topdir, dry):
+  rel_root_dir = rpath()
+  src_root = dpath("scratchpad")
+  src_dir = os.path.join(src_root, topdir)
+  dst_dir = os.path.join(rel_root_dir, topdir)
+
+  if not os.path.isdir(src_dir):
+    exit_with_status(
+      f"cannot write: expected '{_display_src(src_dir)}' to exist. "
+      f"Create scratchpad/{topdir} (Makefiles may need to populate it)."
+    )
+
+  ensure_dir(dst_dir, DEFAULT_DIR_MODE, dry=dry)
+
+  wrote = False
+  mode = target_mode(topdir)
+  for src_abs, rel in iter_src_files(topdir, src_root):
+    dst_abs = os.path.join(dst_dir, rel)
+    copy_one(src_abs, dst_abs, mode, dry=dry)
+    wrote = True
+  if not wrote:
+    msg = "no matching artifacts found"
+    if topdir == "kmod": msg += " (looking for *.ko)"
+    print(f"(info) {msg} in {_display_src(src_dir)}")
+
+def cmd_write(dir_arg, dry=False):
+  assert_env()
+  ensure_dir(rpath(), DEFAULT_DIR_MODE, dry=dry)
+
+  src_root = dpath("scratchpad")
+  if not os.path.isdir(src_root):
+    exit_with_status(f"cannot find developer scratchpad at '{_display_src(src_root)}'")
+
+  if dir_arg:
+    write_one_dir(dir_arg, dry=dry)
+  else:
+    subs = sorted([e.name for e in os.scandir(src_root) if e.is_dir(follow_symlinks=False)])
+    if not subs:
+      print(f"(info) nothing to release; no subdirectories found under {_display_src(src_root)}")
+      return
+    for td in subs:
+      write_one_dir(td, dry=dry)
+
+def _clean_contents(dir_path):
+  if not os.path.isdir(dir_path): return
+  for name in os.listdir(dir_path):
+    p = os.path.join(dir_path, name)
+    if os.path.isdir(p) and not os.path.islink(p):
+      shutil.rmtree(p, ignore_errors=True)
+    else:
+      try: os.unlink(p)
+      except FileNotFoundError: pass
+
+def cmd_clean(dir_arg):
+  assert_env()
+  rel_root_dir = rpath()
+  if not os.path.isdir(rel_root_dir):
+    return
+  if dir_arg:
+    _clean_contents(os.path.join(rel_root_dir, dir_arg))
+  else:
+    for e in os.scandir(rel_root_dir):
+      if e.is_dir(follow_symlinks=False):
+        _clean_contents(e.path)
+
+def CLI():
+  if len(sys.argv) < 2:
+    print(HELP); return
+  cmd, *args = sys.argv[1:]
+  if cmd == "write":
+    cmd_write(args[0] if args else None, dry=False)
+  elif cmd == "clean":
+    cmd_clean(args[0] if args else None)
+  elif cmd == "ls":
+    list_tree(rpath())
+  elif cmd == "help":
+    print(HELP)
+  elif cmd == "dry":
+    if args and args[0] == "write":
+      cmd_write(args[1] if len(args) >= 2 else None, dry=True)
+    else:
+      print(HELP)
+  else:
+    print(HELP)
+
+if __name__ == "__main__":
+  CLI()
