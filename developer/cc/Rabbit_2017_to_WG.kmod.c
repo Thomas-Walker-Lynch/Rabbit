@@ -12,7 +12,7 @@
 #include <net/sock.h>
 #include <net/inet_sock.h>
 
-#define RABBIT_UID 2017
+#define US_UID 2017
 #define DEV_NAME   "US"   /* WireGuard iface to force */
 
 static atomic64_t cnt_v4_local_out = ATOMIC64_INIT(0);
@@ -35,7 +35,7 @@ static int us_ifindex;  /* cached ifindex for DEV_NAME */
 static inline bool from_uid_2017(const struct nf_hook_state *st, struct sk_buff *skb){
   struct sock *sk = st->sk ? st->sk : skb_to_full_sk(skb);
   if (!sk) return false;
-  return __kuid_val(sock_i_uid(sk)) == RABBIT_UID;
+  return __kuid_val(sock_i_uid(sk)) == US_UID;
 }
 
 /* Bind the socket to DEV_NAME once we see its first packet */
@@ -85,7 +85,7 @@ static int __init rabbit_init(void){
 #else
   { int ret = nf_register_hooks(rabbit_ops, ARRAY_SIZE(rabbit_ops)); if (ret) return ret; }
 #endif
-  pr_info("rabbit_uid2017_bind: loaded; UID=%d bound to dev %s(ifindex=%d)\n", RABBIT_UID, DEV_NAME, us_ifindex);
+  pr_info("rabbit_uid2017_bind: loaded; UID=%d bound to dev %s(ifindex=%d)\n", US_UID, DEV_NAME, us_ifindex);
   return 0;
 }
 

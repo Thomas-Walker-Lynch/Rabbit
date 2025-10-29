@@ -28,16 +28,13 @@ machine_executable_list="scratchpad/hello"
 shopt -s nullglob
 
 # zero or more machine executables
-for fglob in $machine_executable_list; do
-  # nesting the loop allows that $fglob is a file glob, and expands it
-  for f in $fglob; do
-    if [[ -x "$f" ]]; then
-      echo "+ install -m 0500 '$f' '$release_dir/machine/'"
-      install -m 0550 "$f" "$release_dir/machine/"
-    else
-      echo "(info) did not find '$f'"
-    fi
-  done
+for f in $machine_executable_list; do
+  if [[ -x "$f" ]]; then
+    echo "+ install -m 0500 '$f' '$release_dir/machine/'"
+    install -m 0550 "$f" "$release_dir/machine/"
+  else
+    echo "(info) did not find '$f'"
+  fi
 done
 
 # zero or more Kernel modules
