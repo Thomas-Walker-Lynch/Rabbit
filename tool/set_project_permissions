@@ -1,0 +1,101 @@
+#!/usr/bin/env -S python3 -B
+# -*- mode: python; coding: utf-8; python-indent-offset: 2; indent-tabs-mode: nil -*-
+
+"""
+set_project_permissions — normalize a project to umask-077 congruence.
+
+usage:
+  set_project_permissions <command>
+
+command::
+  ε | default | help | --help | -h
+
+notes:
+  • Must be run from the toolsmith environment (ENV=tool/env, ROLE=toolsmith).
+  • Starts at $REPO_HOME.
+  • Directories → 0700
+  • Files → 0600, preserving owner-exec (→ 0700)
+  • Skips .git/ and symlinks.
+"""
+
+import os, sys, stat
+
+DIR_MODE_077 = 0o700
+
+def die(msg, code=1):
+  print(f"set_project_permissions: {msg}", file=sys.stderr)
+  sys.exit(code)
+
+def require_toolsmith_env():
+  env = os.environ.get("ENV", "")
+  role = os.environ.get("ROLE", "")
+  if env != "tool/env" or role != "toolsmith":
+    die("bad environment: requires ENV=tool/env and ROLE=toolsmith\n"
+        "hint: source ./env_toolsmith, then run: set_project_permissions default")
+
+def repo_home():
+  rh = os.environ.get("REPO_HOME")
+  if not rh:
+    die("REPO_HOME not set (did you source tool_shared/bespoke/env?)")
+  return os.path.realpath(rh)
+
+def show_path(p, rh):
+  return p.replace(rh, "$REPO_HOME", 1) if p.startswith(rh) else p
+
+def set_mode_if_needed(path, target, rh):
+  try:
+    st = os.lstat(path)
+  except FileNotFoundError:
+    return 0
+  cur = stat.S_IMODE(st.st_mode)
+  if cur == target:
+    return 0
+  os.chmod(path, target)
+  print(f"+ chmod {oct(target)[2:]} '{show_path(path, rh)}'")
+  return 1
+
+def file_target_mode_077_preserve_exec(cur: int) -> int:
+  return 0o700 if (cur & stat.S_IXUSR) else 0o600
+
+def apply_policy(rh):
+  changed = 0
+  for dirpath, dirnames, filenames in os.walk(rh, topdown=True, followlinks=False):
+    # prune .git
+    dirnames[:] = [d for d in dirnames if d != ".git"]
+    # directories → 0700
+    changed += set_mode_if_needed(dirpath, DIR_MODE_077, rh)
+    # files → 0600 (or 0700 if owner-exec already set)
+    for fn in filenames:
+      p = os.path.join(dirpath, fn)
+      if os.path.islink(p):
+        continue
+      try:
+        st = os.lstat(p)
+      except FileNotFoundError:
+        continue
+      target = file_target_mode_077_preserve_exec(stat.S_IMODE(st.st_mode))
+      changed += set_mode_if_needed(p, target, rh)
+  return changed
+
+def cmd_default():
+  require_toolsmith_env()
+  rh = repo_home()
+  total = apply_policy(rh)
+  print(f"changes: {total}")
+
+def main():
+  # No args => show usage (do NOT run)
+  if len(sys.argv) == 1:
+    print(__doc__.strip()); return 1
+
+  cmd = sys.argv[1]
+  if cmd in ("help", "--help", "-h"):
+    print(__doc__.strip()); return 0
+  if cmd in ("default", "e"):
+    cmd_default(); return 0
+
+  # Unknown command => help
+  print(__doc__.strip()); return 1
+
+if __name__ == "__main__":
+  sys.exit(main())

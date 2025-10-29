@@ -13,13 +13,7 @@ HELP = """usage: release {write|clean|ls|help|dry write} [DIR]
 """
 
 ENV_MUST_BE = "developer/tool/env"
-DEFAULT_DIR_MODE = 0o750
-PERM_BY_DIR = {
-  "kmod":    0o440,
-  "machine": 0o550,
-  "python3": 0o550,
-  "shell":   0o550,
-}
+DEFAULT_DIR_MODE = 0o700  # 077-congruent dirs
 
 def exit_with_status(msg, code=1):
   print(f"release: {msg}", file=sys.stderr)
@@ -54,7 +48,6 @@ def rel_root():
   return rpath()
 
 def _display_src(p_abs: str) -> str:
-  # Developer paths shown relative to $REPO_HOME/developer
   try:
     if os.path.commonpath([dev_root()]) == os.path.commonpath([dev_root(), p_abs]):
       return os.path.relpath(p_abs, dev_root())
@@ -63,7 +56,6 @@ def _display_src(p_abs: str) -> str:
   return p_abs
 
 def _display_dst(p_abs: str) -> str:
-  # Release paths shown as literal '$REPO_HOME/release/<rel>'
   try:
     rel = os.path.relpath(p_abs, rel_root())
     rel = "" if rel == "." else rel
@@ -94,13 +86,11 @@ def owner_group(st):
   try: return f"{pwd.getpwuid(st.st_uid).pw_name}:{grp.getgrgid(st.st_gid).gr_name}"
   except Exception: return f"{st.st_uid}:{st.st_gid}"
 
-# ---------- LS with two-pass column width for owner:group ----------
+# ---------- LS (two-pass owner:group width) ----------
 def list_tree(root):
   if not os.path.isdir(root):
     return
-
-  # gather entries in display order, record owner:group widths
-  entries = []  # list of (is_dir, depth, perms, ownergrp, name)
+  entries = []
   def gather(path: str, depth: int, is_root: bool):
     try:
       it = list(os.scandir(path))
@@ -108,46 +98,32 @@ def list_tree(root):
       return
     dirs  = [e for e in it if e.is_dir(follow_symlinks=False)]
     files = [e for e in it if not e.is_dir(follow_symlinks=False)]
-    dirs.sort(key=lambda e: e.name)
-    files.sort(key=lambda e: e.name)
+    dirs.sort(key=lambda e: e.name); files.sort(key=lambda e: e.name)
 
     if is_root:
-      # root-level: dotfiles first
       for f in (e for e in files if e.name.startswith(".")):
-        st = os.lstat(f.path)
-        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
+        st = os.lstat(f.path); entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
       for d in dirs:
-        st = os.lstat(d.path)
-        entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
+        st = os.lstat(d.path); entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
         gather(d.path, depth + 1, False)
       for f in (e for e in files if not e.name.startswith(".")):
-        st = os.lstat(f.path)
-        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
+        st = os.lstat(f.path); entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
     else:
-      # subdirs: dirs then files (dotfiles naturally sort first)
       for d in dirs:
-        st = os.lstat(d.path)
-        entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
+        st = os.lstat(d.path); entries.append((True, depth, filemode(st.st_mode), owner_group(st), d.name + "/"))
         gather(d.path, depth + 1, False)
       for f in files:
-        st = os.lstat(f.path)
-        entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
-
+        st = os.lstat(f.path); entries.append((False, depth, filemode(st.st_mode), owner_group(st), f.name))
   gather(root, depth=1, is_root=True)
 
-  # compute max width for owner:group column
   ogw = 0
   for (_isdir, _depth, _perms, ownergrp, _name) in entries:
-    if len(ownergrp) > ogw:
-      ogw = len(ownergrp)
+    if len(ownergrp) > ogw: ogw = len(ownergrp)
 
-  # print
   print("release/")
-  for (isdir, depth, perms, ownergrp, name) in entries:
+  for (_isdir, depth, perms, ownergrp, name) in entries:
     indent = "  " * depth
-    # perms first, owner:group padded next, then name with tree indent
     print(f"{perms}  {ownergrp:<{ogw}}  {indent}{name}")
-
 # ---------- end LS ----------
 
 def iter_src_files(topdir, src_root):
@@ -166,20 +142,22 @@ def iter_src_files(topdir, src_root):
         rel = os.path.relpath(src, base)
         yield (src, rel)
 
-def target_mode(topdir):
-  return PERM_BY_DIR.get(topdir, 0o440)
+def _target_mode_from_source(src_abs: str) -> int:
+  """077 policy: files 0600; if source has owner-exec, make 0700."""
+  try:
+    sm = stat.S_IMODE(os.stat(src_abs).st_mode)
+  except FileNotFoundError:
+    return 0o600
+  return 0o700 if (sm & stat.S_IXUSR) else 0o600
 
-def copy_one(src_abs, dst_abs, mode, dry=False):
+def copy_one(src_abs, dst_abs, dry=False):
   src_show = _display_src(src_abs)
   dst_show = _display_dst(dst_abs)
   parent = os.path.dirname(dst_abs)
   os.makedirs(parent, exist_ok=True)
+  target_mode = _target_mode_from_source(src_abs)
 
-  # helper: check parent-dir writability
-  def _is_writable_dir(p):
-    return os.access(p, os.W_OK)
-
-  # determine if we must flip u+w on parent
+  def _is_writable_dir(p): return os.access(p, os.W_OK)
   flip_needed = not _is_writable_dir(parent)
   restore_mode = None
   parent_show = _display_dst(parent)
@@ -189,12 +167,12 @@ def copy_one(src_abs, dst_abs, mode, dry=False):
       print(f"(dry) chmod u+w '{parent_show}'")
     if os.path.exists(dst_abs):
       print(f"(dry) unlink '{dst_show}'")
-    print(f"(dry) install -m {oct(mode)[2:]} -D '{src_show}' '{dst_show}'")
+    # show final mode we will set
+    print(f"(dry) install -m {oct(target_mode)[2:]} -D '{src_show}' '{dst_show}'")
     if flip_needed:
       print(f"(dry) chmod u-w '{parent_show}'")
     return
 
-  # real path: flip write bit if needed
   try:
     if flip_needed:
       try:
@@ -204,13 +182,13 @@ def copy_one(src_abs, dst_abs, mode, dry=False):
       except PermissionError:
         exit_with_status(f"cannot write: parent dir not writable and chmod failed on {parent_show}")
 
-    # Replace even if dst exists and is read-only: temp then atomic replace.
+    # Atomic replace with enforced 077-compliant mode
     fd, tmp_path = tempfile.mkstemp(prefix='.tmp.', dir=parent)
     try:
       with os.fdopen(fd, "wb") as tmpf, open(src_abs, "rb") as sf:
         shutil.copyfileobj(sf, tmpf)
         tmpf.flush()
-      os.chmod(tmp_path, mode)
+      os.chmod(tmp_path, target_mode)
       os.replace(tmp_path, dst_abs)
     finally:
       try:
@@ -219,14 +197,11 @@ def copy_one(src_abs, dst_abs, mode, dry=False):
       except Exception:
         pass
   finally:
-    # restore parent dir mode if we flipped it
     if restore_mode is not None:
-      try:
-        os.chmod(parent, restore_mode)
-      except Exception:
-        pass
+      try: os.chmod(parent, restore_mode)
+      except Exception: pass
 
-  print(f"+ install -m {oct(mode)[2:]} '{src_show}' '{dst_show}'")
+  print(f"+ install -m {oct(target_mode)[2:]} '{src_show}' '{dst_show}'")
 
 def write_one_dir(topdir, dry):
   rel_root_dir = rpath()
@@ -243,10 +218,9 @@ def write_one_dir(topdir, dry):
   ensure_dir(dst_dir, DEFAULT_DIR_MODE, dry=dry)
 
   wrote = False
-  mode = target_mode(topdir)
   for src_abs, rel in iter_src_files(topdir, src_root):
     dst_abs = os.path.join(dst_dir, rel)
-    copy_one(src_abs, dst_abs, mode, dry=dry)
+    copy_one(src_abs, dst_abs, dry=dry)
     wrote = True
   if not wrote:
     msg = "no matching artifacts found"
