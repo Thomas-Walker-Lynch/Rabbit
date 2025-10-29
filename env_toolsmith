@@ -1,11 +1,45 @@
 #!/usr/bin/env bash
+# env_toolsmith — enter the project toolsmith environment
+# (must be sourced)
+
 script_afp=$(realpath "${BASH_SOURCE[0]}")
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   echo "$script_afp:: This script must be sourced, not executed."
   exit 1
 fi
 
-export ROLE=toolsmith
-source tool_shared/bespoke/env
-export ENV=$ROLE
+# enter project environment
+#
+  source tool_shared/bespoke/env
 
+# setup tools
+# initially these will not exist, as the toolsmith installs them
+#
+  export PYTHON_HOME="$REPO_HOME/tool_shared/third_party/python"
+  if [[ ":$PATH:" != *":$PYTHON_HOME/bin:"* ]]; then
+    export PATH="$PYTHON_HOME/bin:$PATH"
+  fi
+
+  RT_gcc="$REPO_HOME/tool_shared/third_party/RT_gcc/release"
+  if [[ ":$PATH:" != *":$RT_gcc:"* ]]; then
+    export PATH="$RT_gcc:$PATH"
+  fi
+
+# enter the role environment
+#
+  export ROLE=toolsmith
+
+  TOOL_DIR="$REPO_HOME/tool"
+  if [[ ":$PATH:" != *":$TOOL_DIR:"* ]]; then
+    export PATH="$TOOL_DIR:$PATH"
+  fi
+
+  export ENV="tool/env"
+
+  cd "$REPO_HOME"
+  if [[ -f "tool/env" ]]; then
+    source "tool/env"
+    echo "in environment: $ENV"
+  else
+    echo "not found: $ENV"
+  fi

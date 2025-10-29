@@ -175,26 +175,56 @@ def copy_one(src_abs, dst_abs, mode, dry=False):
   parent = os.path.dirname(dst_abs)
   os.makedirs(parent, exist_ok=True)
 
+  # helper: check parent-dir writability
+  def _is_writable_dir(p):
+    return os.access(p, os.W_OK)
+
+  # determine if we must flip u+w on parent
+  flip_needed = not _is_writable_dir(parent)
+  restore_mode = None
+  parent_show = _display_dst(parent)
+
   if dry:
+    if flip_needed:
+      print(f"(dry) chmod u+w '{parent_show}'")
     if os.path.exists(dst_abs):
       print(f"(dry) unlink '{dst_show}'")
     print(f"(dry) install -m {oct(mode)[2:]} -D '{src_show}' '{dst_show}'")
+    if flip_needed:
+      print(f"(dry) chmod u-w '{parent_show}'")
     return
 
-  # Replace even if dst exists and is read-only: write temp then atomic replace.
-  fd, tmp_path = tempfile.mkstemp(prefix=".tmp.", dir=parent)
+  # real path: flip write bit if needed
   try:
-    with os.fdopen(fd, "wb") as tmpf, open(src_abs, "rb") as sf:
-      shutil.copyfileobj(sf, tmpf)
-      tmpf.flush()
-    os.chmod(tmp_path, mode)
-    os.replace(tmp_path, dst_abs)
-  finally:
+    if flip_needed:
+      try:
+        st_parent = os.stat(parent)
+        restore_mode = stat.S_IMODE(st_parent.st_mode)
+        os.chmod(parent, restore_mode | stat.S_IWUSR)
+      except PermissionError:
+        exit_with_status(f"cannot write: parent dir not writable and chmod failed on {parent_show}")
+
+    # Replace even if dst exists and is read-only: temp then atomic replace.
+    fd, tmp_path = tempfile.mkstemp(prefix='.tmp.', dir=parent)
     try:
-      if os.path.exists(tmp_path):
-        os.unlink(tmp_path)
-    except Exception:
-      pass
+      with os.fdopen(fd, "wb") as tmpf, open(src_abs, "rb") as sf:
+        shutil.copyfileobj(sf, tmpf)
+        tmpf.flush()
+      os.chmod(tmp_path, mode)
+      os.replace(tmp_path, dst_abs)
+    finally:
+      try:
+        if os.path.exists(tmp_path):
+          os.unlink(tmp_path)
+      except Exception:
+        pass
+  finally:
+    # restore parent dir mode if we flipped it
+    if restore_mode is not None:
+      try:
+        os.chmod(parent, restore_mode)
+      except Exception:
+        pass
 
   print(f"+ install -m {oct(mode)[2:]} '{src_show}' '{dst_show}'")
 
