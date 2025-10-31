@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# .git/hooks/pre-commit (make executable):
+set -euo pipefail
+changed=$(git diff --cached --name-only --diff-filter=AM | grep -E '\.(c|h|cpp|hpp|py|json|ya?ml)$' || true)
+[ -z "$changed" ] && exit 0
+fail=0
+for f in $changed; do
+  tmp=$(mktemp)
+  python3 tool/rtfmt <"$f" >"$tmp" || { rm -f "$tmp"; fail=1; continue; }
+  if ! diff -q "$f" "$tmp" >/dev/null; then
+    mv "$tmp" "$f"
+    git add "$f"
+    echo "rtfmt: rewrote $f"
+  else
+    rm -f "$tmp"
+  fi
+done
+exit $fail
